@@ -21,6 +21,7 @@
 				font-size: 20px;
 				font-family:Arial, Helvetica, sans-serif, Courier, monospace; 
 				box-sizing: border-box;
+				color: rgba(0, 0, 0, );
 				
 			}
 			.container{
@@ -81,20 +82,21 @@
 			span{
 				background-color:steelblue;
 				padding: 5px;
-				margin: 5px 0px 5px 0px;
+				margin: 10px 0px 5px 0px;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="mainContainer">
-			<h1 id="siteTitle">orpfk</h1>
+			<h1 id="siteTitle">Prelog</h1>
 			<div class="container">
 				
 				
 				<div class="left" style="background-color:cadetblue ">
 					<div class = "heading1"><h3>Facts: </h3></div>
 					<div style="width: 100%;flex: 1;box-sizing: border-box;display: flex;">
-						<textarea id="facts" >john has fun.&#13;&#10;stacy has books.</textarea>
+						
+						<textarea id="facts">john has fun.&#13;&#10;stacy has books.&#13;&#10;steve loves soccer.</textarea>
 					</div>
 				</div>
 				<div class="left" style="background-color: rosybrown; ">
@@ -103,15 +105,15 @@
 						<h3 style="margin-right:10px;">Query</h3>
 						<div style="flex: 1;display: flex; flex-direction: row;  text-align: center;"> 
 							
-							<input style="flex:1" type="text" value="$x has fun?" id="query">
-							<input type="button" value="run query" style="height: 100%; text-align: center; ">
+							<input style="flex:1" type="text" value="$x has $y?" id="query">
+							<input type="button" onclick="webQuery()" value="run query" style="height: 100%; text-align: center; ">
 						</div>
 					</div>
 					
 					<div class = "heading1"><h3>Output</h3></div>
 					<div style="width: 100%;flex: 1;box-sizing: border-box;display: flex;">
 						
-						<textarea id="facts" disabled>press the "run query" button to see the results of your query!</textarea>
+						<textarea id="output" disabled>press the "run query" button to see the results of your query!</textarea>
 					</div>
 						
 				</div>
@@ -127,7 +129,47 @@
 
 </html>
 <script type="text/javascript" src="index.js"></script> 
-<script>
+<script type="text/javascript" >
+	console.clear()
+	Array.prototype.random = function () {
+  		return this[Math.floor((Math.random()*this.length))];
+	}
 
+	let siteNames = [
+		"Prelog", 
+		"ProProlog", 
+		"PreProlog log",
+		"GoPro log",
+		"PrePre ProPro",
+		"PreMarital Pre",
+		"PreMarital Pro",
+		"ProPro Gadget Pre Pre",
+		"Captain's PreLog",
+		"ProAlgebra"
+	]
+
+	let siteName = ((Math.floor((Math.random()*100)) < 70)? "Prelog" : siteNames.random() )+ " Evaluator";
+	document.title = siteName;
+	document.getElementById("siteTitle").innerHTML = siteName;
+
+	function webQuery(){
+		let query = document.getElementById("query");
+		let facts = document.getElementById("facts");
+		let output = document.getElementById("output");
+		let result = getQueryResults(facts.value, query.value);
+		//console.log(result.toString());
+		output.innerHTML = result.toString();
+	}
+
+	function getQueryResults(facts, query){
+		let tokens = new Tokenizer(facts).tokenize();
+		let ast = new Parser(tokens).getAST();
+		let world = new World();
+		ast.eval(world);
+
+		tokens = new Tokenizer(query).tokenize();
+		ast = new Parser(tokens).getAST();
+		return ast.eval(world);
+	}
 
 </script>
