@@ -1,0 +1,24 @@
+
+john has apples.
+$x has apples?
+
+$X is theif if:
+	$X has $Y,
+	not $X has permission $Y.
+
+marc is theif if: gun can harm($X).
+ 
+
+$X is dangerous if: 
+	$X can harm($Y).
+
+
+
+$X is ChokingHazard if:
+	not($X is edible),
+	$X is dangerous,
+	$X is small.
+
+$X is ChokingHazard.
+
+
