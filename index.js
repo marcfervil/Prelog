@@ -392,7 +392,7 @@ class Fact{
 	 $x has fun if: $x has apples.
 	 */
 
-	validVariadicPredicateFact(assume, fact){
+	validVariadicPredicateFact(assume, fact, query){
 		//let hasVar = 
 		
 		if(!this.variadic()) return false;
@@ -405,10 +405,10 @@ class Fact{
 		for(let varSubject of this.subjects){
 			if(varSubject.isVar()){
 				//for(let subject in this.world.subjects){
-					let world = this.world.copyWorld(this);
-					if(world.facts.length == 0)return true;
-					let varList = []
-					let varListPos = {};
+				let world = this.world.copyWorld(this);
+				if(world.facts.length == 0)return true;
+				let varList = []
+				let varListPos = {};
 
 					/*
 					for(let predicate of this.predicates){
@@ -425,47 +425,61 @@ class Fact{
 						}
 					}*/
 					//console.log(this.toString(),fact.toString())
-
-					
-					for(let i=0; i<this.subjects.length;i++){
-						let termName = this.subjects[i].name;
-						if(termName[0]=="$"){
-							varList.push(termName);
-							varListPos[termName] = i;
-						}
+	
+				
+				for(let i=0; i<this.subjects.length;i++){
+					let termName = this.subjects[i].name;
+					if(termName[0]=="$" && !varList.includes(termName)){
+						varList.push(termName);
+						varListPos[termName] = i;
 					}
+				}
+		
+				let newAssume = {}
+				//varListPos["$x"] = 2
+			//	console.log(varListPos)
+				for(let i=0;i<Object.entries(assume).length; i++){
+					// i should be varListPos[varList[i]]
+				//	if(!myVars.includes(varList[i]))console.log("fwko")
+					if(!myVars.includes(varList[i]))continue;
+					
+					if(!fact.subjects[varListPos[varList[i]]])continue;
+					
+					//console.log(fact.subjects.toString())
+					
+					newAssume[varList[i]] = fact.subjects[varListPos[varList[i]]].name
+					//newAssume[varList[i]] = assume[varList[i]]
+				}
+				
 			
-					let newAssume = {}
-					//varListPos["$x"] = 2
-				//	console.log(varListPos)
-					for(let i=0;i<Object.entries(assume).length; i++){
-						// i should be varListPos[varList[i]]
-						if(!myVars.includes(varList[i]))continue;
-						if(!fact.subjects[varListPos[varList[i]]])continue;
-						//console.log(fact.subjects.toString())
-						newAssume[varList[i]] = fact.subjects[varListPos[varList[i]]].name
-						//newAssume[varList[i]] = assume[varList[i]]
-					}
-					
-					
-					//console.log(this.toString())
-					let newFact = this.factWithAssumption(newAssume, world);
-					
-					//if(newFact.validatePredicates()){
-						//console.table([newFact.toString(), fact.toString()])
-						if(!newFact.strictIs(fact)){
-							//console.log(false)
-							continue;
+				let newFact = this.factWithAssumption(newAssume, world);
+				
+				if(newFact.variadic()){
+					let variadicAssume = {}
+					let i=0;
+					for(let term of newFact.subjects){
+						if(term.isVar()){
+							//console.log(query)
+							variadicAssume[term.name] = query.node.subjects[i].value;
+							
 						}
-						
-					//}
-					//console.log(newAssume, world.subjects) 
-					//console.log("",fact.toString(), "vs\t\t", newFact.toString())
-					if(newFact.validatePredicates()){
-						return true;  
+						i++;
 					}
-				//}
-				//console.log("ere?")
+					newFact = newFact.factWithAssumption(variadicAssume, world);
+					//console.log(newNewAssume)
+				}
+				//console.log(newFact,newFact.variadic())
+				//console.table([newFact.toString(), fact.toString(), newAssume])
+					if(!newFact.strictIs(fact, false)){
+						continue;
+					}
+				
+
+				if(newFact.validatePredicates()){
+					//console.log("TRUTH")
+					return true;  
+						
+				}
 				
 			}
 		}
@@ -532,13 +546,13 @@ class Fact{
 		
 	};
 
-	strictIs(other){
+	strictIs(other, withVars=true){
 		for(let [a,b] of zip(this.subjects, other.subjects)){
 			//console.log(JSON.stringify(a))
 			//console.log(a,"vs",b)
 			//if((a.name[0]=="$" || b.name[0]=="$") ){
 			//console.log("\t", a.name, "vs", b.name)
-			if(a.isVar() || b.isVar())continue;
+			if((a.isVar() || b.isVar()) && withVars)continue;
 
 			if(a.name!=b.name){
 				//console.log("")
@@ -680,7 +694,7 @@ function test(){
 	//anyone has trust issues if matt has apples
 	console.clear()
 
-
+/*
 	let worldData = `
 
 	
@@ -691,6 +705,19 @@ function test(){
 	man holding man.
 
 	$x wants $y if: $x has fun, $x holding $y.
+
+	
+	` */
+	let worldData = `
+
+	
+	john has fun.
+	jane has jane.
+	man has fun.
+	john holding plant.
+	man holding man.
+
+	$x likes $y if: $x has fun, $x holding $y.
 
 	
 	` 
@@ -707,8 +734,9 @@ function test(){
 	//
 	//jane smokes $x?
 	//$x smokes $y?
+	//$a $b $b?
 	query = `
-	$a wants $b?
+	$x likes plant?
 	
 	`
 	tokens = new Tokenizer(query).tokenize();
