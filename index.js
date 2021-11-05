@@ -687,10 +687,10 @@ function test(){
 	john has fun.
 	jane has jane.
 	man has fun.
-	john holding weed.
+	john holding plant.
 	man holding man.
 
-	$x smokes $y if: $x has fun, $x holding $y.
+	$x wants $y if: $x has fun, $x holding $y.
 
 	
 	` 
@@ -708,7 +708,7 @@ function test(){
 	//jane smokes $x?
 	//$x smokes $y?
 	query = `
-	$a smokes $b?
+	$a wants $b?
 	
 	`
 	tokens = new Tokenizer(query).tokenize();
