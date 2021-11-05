@@ -179,7 +179,7 @@ class QueryNode extends AstNode{
 		this.node = node;
 	
 	}
-	eval(world, assume={}, seen = []){
+	eval(world, assume={}, seen = [], ogQuery=this){
 		
 		let answer = new QueryAnswer(false);
 		let complex = false;
@@ -221,7 +221,7 @@ class QueryNode extends AstNode{
 					
 					//console.log("peepeepoopoo",)
 					let query = new QueryNode(new FactNode(...substitutionFact));
-					let result = query.eval(world, given, seen);
+					let result = query.eval(world, given, seen, ogQuery);
 					if(result.outcome){
 						answer.outcome = true;
 						given[subject.name] = subjectName;
@@ -250,7 +250,7 @@ class QueryNode extends AstNode{
 					//console.log(factQuery.toString())
 					//console.log("woijf")
 					//console.log("fopk", factQuery.toString())
-					if(fact.validVariadicPredicateFact(assume, factQuery)){
+					if(fact.validVariadicPredicateFact(assume, factQuery, ogQuery)){
 						answer.outcome = true;
 						return answer;
 					}
@@ -408,7 +408,9 @@ class Fact{
 					let world = this.world.copyWorld(this);
 					if(world.facts.length == 0)return true;
 					let varList = []
-					let varListPos = {}
+					let varListPos = {};
+
+					/*
 					for(let predicate of this.predicates){
 						//console.log(predicate)
 						let i = 0;
@@ -421,20 +423,43 @@ class Fact{
 							}
 							i+=1;
 						}
+					}*/
+					//console.log(this.toString(),fact.toString())
+
+					
+					for(let i=0; i<this.subjects.length;i++){
+						let termName = this.subjects[i].name;
+						if(termName[0]=="$"){
+							varList.push(termName);
+							varListPos[termName] = i;
+						}
 					}
 			
 					let newAssume = {}
-				
-					
+					//varListPos["$x"] = 2
+				//	console.log(varListPos)
 					for(let i=0;i<Object.entries(assume).length; i++){
 						// i should be varListPos[varList[i]]
 						if(!myVars.includes(varList[i]))continue;
 						if(!fact.subjects[varListPos[varList[i]]])continue;
+						//console.log(fact.subjects.toString())
 						newAssume[varList[i]] = fact.subjects[varListPos[varList[i]]].name
+						//newAssume[varList[i]] = assume[varList[i]]
 					}
-					//console.log(newAssume)
+					
+					
 					//console.log(this.toString())
 					let newFact = this.factWithAssumption(newAssume, world);
+					
+					//if(newFact.validatePredicates()){
+						//console.table([newFact.toString(), fact.toString()])
+						if(!newFact.strictIs(fact)){
+							//console.log(false)
+							continue;
+						}
+						
+					//}
+					//console.log(newAssume, world.subjects) 
 					//console.log("",fact.toString(), "vs\t\t", newFact.toString())
 					if(newFact.validatePredicates()){
 						return true;  
@@ -643,6 +668,14 @@ function assertTests(){
  * 
  */
 
+	/**
+	 * 
+	john has fun.
+	jane has jane.
+
+	jane smokes $x if: $x has fun.
+	 */
+
 function test(){
 	//anyone has trust issues if matt has apples
 	console.clear()
@@ -651,9 +684,14 @@ function test(){
 	let worldData = `
 
 	
-	
-	john has apples.
-	matt does run.
+	john has fun.
+	jane has jane.
+	man has fun.
+	john holding weed.
+	man holding man.
+
+	$x smokes $y if: $x has fun, $x holding $y.
+
 	
 	` 
 
@@ -667,11 +705,11 @@ function test(){
 	
 	//query = `matt has trust_issues?`
 	//
-	
-	
+	//jane smokes $x?
+	//$x smokes $y?
 	query = `
+	$a smokes $b?
 	
-	$x does run?
 	`
 	tokens = new Tokenizer(query).tokenize();
 	//console.log(tokens2.toString())
@@ -680,7 +718,7 @@ function test(){
 	console.log("------------------------\n");
 	console.log(res.toString());
 	//console.log("------------------------\n");
-	assertTests();
+	//assertTests();
 };
 
 function cli(){
