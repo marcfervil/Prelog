@@ -619,10 +619,12 @@ function assert(testName, worldData, query, shouldBe){
 	//console.log(tokens2.toString())
 	ast = new Parser(tokens).getAST();
 	let res = ast.eval(world);
-	//console.log(res.toString())
+	
 	let passfail = (res.toString()==shouldBe.join("\n"));
 	if(!passfail){
-		console.error("FAILED:", testName, res.toString())
+		console.error("FAILED:", testName)
+		//console.error("GOT:\n", res.toString())
+		//console.error("EXPECTED:\n", shouldBe.join("\n"))
 	}
 	return passfail;
 }
@@ -641,13 +643,87 @@ function assertTests(){
 	assert("fact with predicate",`john is scared if: stacy has apples, stacy has fun. stacy has apples.`, "$x is scared?", ["false"]);
 	assert("lie with predicate ", `john is scared if: stacy has apples. stacy has self_control.`, "$x is scared?", ["false"]);
 	
-	assert("multivar preducate fact", 
+	assert("fact with variadic predicate", 
 		`jill has apples. 
 		steve has taste if: $x has apples. 
 		john has fun if: steve has taste.`,
 		"$b has fun?",
 		["$b = john", "true"]
 	)
+
+	let exworld = `
+		john has fun.
+		man has fun.
+		man holding hands.
+		john holding plant.
+		man has man.
+		
+		`
+	
+	let exworld0 = exworld + "$x wants peace if: $x has fun."
+	assert("variadic predicate basic fact", exworld0, 
+	"$a wants peace?",
+	[
+		"$a = john",
+		"$a = man",
+		"true"
+	]);
+
+	let exworld0_1 = exworld + "world wants $x if: $x has fun."
+	assert("asymetric variadic predicate basic fact", exworld0_1, 
+	"world wants $y?",
+	[
+		"$y = john",
+		"$y = man",
+		"true"
+	]);
+
+	let exworld1 = exworld + "$x wants $y if: $x has fun, $x holding $y."
+
+	assert("variadic predicate fact #1", exworld1, 
+	"$a wants $b?",
+	[
+		"$a = john, $b = plant",
+		"$a = man, $b = hands",
+		"true"
+	]);
+
+	assert("variadic predicate fact #2", exworld1, 
+	"john wants $b?",
+	[
+		"$b = plant",
+		"true"
+	]);
+
+	assert("variadic predicate lie #2", exworld1, 
+	"man wants plant?",
+	[
+		"false"
+	]);
+
+	assert("variadic predicate fact #3", exworld1, 
+	"$b wants hands?",
+	[
+		"$b = man",
+		"true"
+	]);
+
+	assert("variadic predicate lie #3", exworld1, 
+	"john wants hands?",
+	[
+		"false"
+	]);
+
+	let exworld2 = exworld + "$x $y $y if: $x has fun, $x holding $y."
+
+	assert("variadic predicate fact with previously referenced var", exworld2, 
+	"$a $b $b?",
+	[
+		"$a = john, $b = plant",
+		"$a = man, $b = hands",
+		"true"
+	]);
+
 }
 
 /**
@@ -715,10 +791,10 @@ function test(){
 	ast.eval(world);
 	//console.log(world.facts.toString())
 	
-
+//	$a wants $b?
 	query = `
 	
-	man wants hands?
+	
 	`
 	tokens = new Tokenizer(query).tokenize();
 	//console.log(tokens2.toString())
@@ -727,7 +803,7 @@ function test(){
 	console.log("------------------------\n");
 	console.log(res.toString());
 	//console.log("------------------------\n");
-	//assertTests();
+	assertTests();
 };
 
 function cli(){
