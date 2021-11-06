@@ -366,11 +366,12 @@ class Fact{
 
 
 	validatePredicates(world){
+		if(!world)world=this.world;
 		for(let predicate of this.predicates){
 				
 			//console.log(predicate.constructor.name)
 
-			let result = predicate.eval(this.world)
+			let result = predicate.eval(world)
 
 			if(!result.outcome){
 				//console.log("pred:",predicate.toString(), "fax:",this.world.facts.toString())
@@ -438,7 +439,7 @@ class Fact{
 				let newAssume = {}
 				//varListPos["$x"] = 2
 			//	console.log(varListPos)
-				for(let i=0;i<Object.entries(assume).length; i++){
+				for(let i=0;i<varList.length; i++){
 					// i should be varListPos[varList[i]]
 				//	if(!myVars.includes(varList[i]))console.log("fwko")
 					if(!myVars.includes(varList[i]))continue;
@@ -453,23 +454,7 @@ class Fact{
 				
 			
 				let newFact = this.factWithAssumption(newAssume, world);
-				
-				if(newFact.variadic()){
-					let variadicAssume = {}
-					let i=0;
-					for(let term of newFact.subjects){
-						if(term.isVar()){
-							//console.log(query)
-							variadicAssume[term.name] = query.node.subjects[i].value;
-							
-						}
-						i++;
-					}
-					newFact = newFact.factWithAssumption(variadicAssume, world);
-					//console.log(newNewAssume)
-				}
-				//console.log(newFact,newFact.variadic())
-				//console.table([newFact.toString(), fact.toString(), newAssume])
+			
 					if(!newFact.strictIs(fact, false)){
 						continue;
 					}
@@ -584,7 +569,7 @@ class World {
 	copyWorld(without){
 		let copy = new World();
 		//!fact.is(without, false)
-		copy.facts = this.facts.filter((fact)=>!fact.strictIs(without)); 
+		copy.facts = this.facts.filter((fact)=>!fact.strictIs(without,false)); 
 		copy.subjects = {...this.subjects};
 		return copy;
 	}
@@ -712,12 +697,12 @@ function test(){
 
 	
 	john has fun.
-	jane has jane.
 	man has fun.
+	man holding hands.
 	john holding plant.
-	man holding man.
+	man has man.
 
-	$x likes $y if: $x has fun, $x holding $y.
+	$x wants $y if: $x has fun, $x holding $y.
 
 	
 	` 
@@ -730,14 +715,10 @@ function test(){
 	ast.eval(world);
 	//console.log(world.facts.toString())
 	
-	//query = `matt has trust_issues?`
-	//
-	//jane smokes $x?
-	//$x smokes $y?
-	//$a $b $b?
+
 	query = `
-	$x likes plant?
 	
+	man wants hands?
 	`
 	tokens = new Tokenizer(query).tokenize();
 	//console.log(tokens2.toString())
